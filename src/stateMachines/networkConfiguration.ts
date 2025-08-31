@@ -15,6 +15,7 @@ import { type CommonContext, invokeWsmanCall } from './common.js'
 import { UNEXPECTED_PARSE_ERROR } from '../utils/constants.js'
 import { WiredConfiguration } from './wiredNetworkConfiguration.js'
 import { WiFiConfiguration } from './wifiNetworkConfiguration.js'
+import { ProxyConfiguration } from './proxyConfiguration.js'
 
 export interface NetworkConfigContext extends CommonContext {
   amtProfile: AMTConfiguration | null
@@ -40,6 +41,7 @@ export class NetworkConfiguration {
   error: Error = new Error()
   wiredConfiguration: WiredConfiguration = new WiredConfiguration()
   wifiConfiguration: WiFiConfiguration = new WiFiConfiguration()
+  proxyConfiguration: ProxyConfiguration = new ProxyConfiguration()
 
   putGeneralSettings = async ({ input }: { input: NetworkConfigContext }): Promise<any> => {
     input.xmlMessage = input.amt.GeneralSettings.Put(input.generalSettings)
@@ -103,6 +105,7 @@ export class NetworkConfiguration {
     actors: {
       wiredConfiguration: this.wiredConfiguration.machine,
       wifiConfiguration: this.wifiConfiguration.machine,
+      proxyConfiguration: this.proxyConfiguration.machine,
       errorMachine: this.error.machine,
       putGeneralSettings: fromPromise(this.putGeneralSettings),
       enumerateEthernetPortSettings: fromPromise(this.enumerateEthernetPortSettings),
@@ -289,6 +292,23 @@ export class NetworkConfiguration {
             retryCount: 0,
             amt: context.amt,
             cim: context.cim
+          }),
+          onDone: 'SUCCESS'
+        }
+      },
+      PROXY_CONFIGURATION: {
+        entry: sendTo('proxy-configuration-machine', { type: 'PROXYCONFIG' }),
+        invoke: {
+          src: 'proxyConfiguration',
+          id: 'proxy-configuration-machine',
+          input: ({ context }) => ({
+            clientId: context.clientId,
+            amtProfile: context.amtProfile,
+            httpHandler: context.httpHandler,
+            message: '',
+            proxyConfigsCount: 0,
+            retryCount: 0,
+            ips: context.ips
           }),
           onDone: 'SUCCESS'
         }
